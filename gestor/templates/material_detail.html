@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Materiais Cadastrados{% endblock %}
+
+{% block 'conteudo' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Visualizar Material</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff; /* Fundo branco para a página */
+            color: #333; /* Texto preto */
+            padding: 20px;
+        }
+
+        input[type="submit"] {
+            background-color: #d9534f; /* Vermelho */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #c9302c;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center; /* Centraliza o título */
+            margin-top: 0; /* Remove margem superior padrão do h1 */
+        }
+
+        .conteudo {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #1f3154; /* Fundo azul para a seção de conteúdo */
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: #fff; /* Texto branco para contrastar */
+        }
+
+        .info {
+            margin-bottom: 10px;
+        }
+
+        .info label {
+            font-weight: bold;
+        }
+
+        .info span {
+            margin-left: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <input type="submit" onclick="location.href = '{% url 'gestor:material_list' %}'" value="Materiais Cadastrados"
+        title="Clique para voltar para a lista de Materiais Cadastrados">
+    <div class="conteudo">
+        <h1>Detalhes do Material:</h1>
+        <div class="info">
+            <label for="nome_material">Nome do Material:</label>
+            <span id="nome_material">{{ object.nome_do_material }}</span>
+        </div>
+    </div>
+</body>
+
+</html>
+
+{% endblock %}

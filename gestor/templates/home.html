@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}
+    Home
+{% endblock %}
+
+{% block 'conteudo' %}
+
+<div class="container">
+    <br>
+    <br>
+
+    <!-- Título principal da página -->
+    <h1 class="display-4">Sistema de Mapeamento de Materiais
+        <hr style="display: block;">
+    </h1>
+
+    <!-- Saudação ao administrador -->
+    <p class="lead">
+        <!-- Ícone de casa seguido da mensagem de boas-vindas -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house"
+            viewBox="0 0 16 16">
+            <path
+                d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z" />
+        </svg>
+        Olá, seja bem vindo, você está logado como ADMINISTRADOR!
+    </p>
+
+    <!-- Row principal -->
+    <div class="row">
+        <!-- Coluna para as Salas -->
+        <div class="col-md-6">
+            <!-- Card para as Salas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Salas</h5>
+                    <p class="card-text">Aqui você pode ver todas as salas cadastradas no sistema.</p>
+                    <a href="{% url 'gestor:gestor_ver_salas' %}" class="btn btn-primary">Ver salas</a>
+                </div>
+            </div>
+
+            <!-- Card para a tabela de Reservas de Salas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Tabela de Reservas de Salas</h5>
+                    <p class="card-text">Veja as reservas das Salas na tabela.</p>
+                    <a href="{% url 'gestor:calendario_reservas' %}" class="btn btn-primary">Ver Tabela</a>
+                </div>
+            </div>
+
+            <!-- Card para o calendário de Reservas de Salas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title"> Calendário de Reservas de Salas</h5>
+                    <p class="card-text">Veja as reservas das Salas no calendário.</p>
+                    <a href="{% url 'gestor:reservas_salas' %}" class="btn btn-primary">Ver Calendário</a>
+                </div>
+            </div>
+
+            <!-- Card para o Cadastro de Salas -->
+            <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Cadastro de Salas</h5>
+                        <p class="card-text">Cadastar/Editar/Apagar Salas.</p>
+                        <a href="{% url 'gestor:sala_list' %}" class="btn btn-primary">Cadastrar Salas</a>
+                    </div>
+            </div>
+        </div>
+
+        <!-- Coluna para os Materiais -->
+        <div class="col-md-6">
+            <!-- Card para os Materiais -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Materiais</h5>
+                    <p class="card-text">Aqui você pode ver todos materiais cadastrados no sistema.</p>
+                    <a href="{% url 'gestor:gestor_ver_materiais' %}" class="btn btn-primary">Ver materiais</a>
+                </div>
+            </div>
+
+            <!-- Card para a tabela de Reservas de Materiais -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Tabela de Reservas de Materiais</h5>
+                    <p class="card-text">Veja as reservas dos Materiais na tabela.</p>
+                    <a href="{% url 'gestor:calendario_reservas_materiais' %}" class="btn btn-primary">Ver Tabela</a>
+                </div>
+            </div>
+
+            <!-- Card para o calendario de Reservas de Materiais -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Calendário Reservas de Materiais</h5>
+                    <p class="card-text">Veja as reservas dos Materiais no calendário.</p>
+                    <a href="{% url 'gestor:reservas_materiais' %}" class="btn btn-primary">Ver Calendário</a>
+                </div>
+            </div>
+
+            <!-- Card para o cadastro de materiais-->
+            <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Cadastro de Materiais</h5>
+                        <p class="card-text">Cadastar/Editar/Apagar Materiais.</p>
+                        <a href="{% url 'gestor:material_list' %}" class="btn btn-primary">Cadastrar Materiais</a>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

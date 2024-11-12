@@ -1,0 +1,18 @@
+{
+    "historico_reservas": [
+        {
+            "usuario": "LUCAS",
+            "material": "projetor",
+            "data_reserva": "14/12/2023",
+            "data_devolucao": "27/12/2023",
+            "data_solicitacao": "25/12/2023"
+        },
+        {
+            "usuario": "OutroUsuario",
+            "material": "outro_material",
+            "data_reserva": "DD/MM/AAAA",
+            "data_devolucao": "DD/MM/AAAA",
+            "data_solicitacao": "DD/MM/AAAA"
+        }
+    ]
+}

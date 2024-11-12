@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Salas Cadastradas{% endblock %}
+
+{% block 'conteudo' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Apagar Sala</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff; /* Fundo branco para a página */
+            color: #333; /* Texto preto */
+            padding: 20px;
+        }
+
+        input[type="submit"],
+        input[type="reset"] {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"] {
+            background-color: #5cb85c; /* Verde */
+        }
+
+        input[type="submit"]:hover {
+            background-color: #4cae4c;
+        }
+
+        input[type="reset"] {
+            background-color: #d9534f; /* Vermelho */
+        }
+
+        input[type="reset"]:hover {
+            background-color: #c9302c;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #1f3154;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f3154 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        h1 {
+            color: #fff;
+            text-align: center; /* Centraliza o título */
+            margin-top: 0; /* Remove margem superior padrão do h1 */
+        }
+
+        .conteudo {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #1f3154; /* Fundo azul para a seção de conteúdo */
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: #fff; /* Texto branco para contrastar */
+        }
+
+        .info {
+            margin-bottom: 10px;
+        }
+
+        .info label {
+            font-weight: bold;
+        }
+
+        .info span {
+            margin-left: 10px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="tooltip">
+        <input type="submit" onclick="location.href = '{% url 'gestor:sala_list' %}'" value="Voltar Para Lista"
+            title="Voltar para Lista" class="tooltip">
+        <span class="tooltiptext">Voltar para Lista</span>
+    </div>
+    <div class="conteudo">
+        <h1>Apagar Sala</h1>
+        <p>Tem certeza que deseja Apagar a Sala '{{ object.nome_da_sala }}'?</p>
+        <form action="." method="post">
+            {% csrf_token %}
+            <input type="submit" value="Sim, Tenho Certeza" title="Confirmar"
+                onclick="return confirm('Tem certeza que deseja apagar esta sala?');">
+            <input type="reset" onclick="location.href = '{% url 'gestor:sala_list' %}'"
+                value="Não quero Apagar" title="Cancelar">
+        </form>
+    </div>
+</body>
+
+</html>
+
+{% endblock %}

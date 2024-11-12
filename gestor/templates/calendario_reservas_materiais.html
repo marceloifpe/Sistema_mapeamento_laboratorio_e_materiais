@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}
+    Calendário de Reservas de Materiais
+{% endblock %}
+
+{% block 'conteudo' %}
+<html lang="pt-br">
+<head>
+    <!-- Define o design da tabela -->
+    <style>
+        .titulo {
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #1D2B4E; /* Azul */
+            color: white;
+        }
+
+        td ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        td ul li {
+            list-style-type: none;
+            margin-bottom: 5px;
+        }
+        tr {
+            background-color: #ffff99;
+        }
+    </style>
+</head>
+<body>
+    <!-- Título da página -->
+    <h1 class="titulo">Calendário de Reservas de Materiais</h1>
+
+    <!-- Tabela para exibir eventos do calendário -->
+    <table>
+        <!-- Cabeçalho da tabela -->
+        <thead>
+            <tr>
+                <!-- Define os cabeçalhos das colunas -->
+                <th>Data de Solicitação</th>
+                <th>Data de Reserva</th>
+                <th>Data de Devolução</th>
+                <th>Detalhes da Reserva</th>   
+            </tr>
+        </thead>
+        <!-- Corpo da tabela -->
+        <tbody>
+            <!-- Loop através dos eventos -->
+            {% for evento_materiais in eventos_materiais %}
+                {% for evento_na_data in evento_materiais.eventos %}
+                    <tr>
+                        <!-- Exibe a data de solicitação do evento -->
+                        <td>{{ evento_na_data.data_solicitacao }}</td>
+                        <!-- Exibe a data de reserva do evento -->
+                        <td>{{ evento_na_data.start }}</td>
+                        <!-- Exibe a data de devolução do evento -->
+                        <td>{{ evento_na_data.end }}</td>
+                        <!-- Detalhes da reserva -->
+                        <td>
+                            <!-- Exibe o título do evento -->
+                            {{ evento_na_data.title }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+{% endblock %}

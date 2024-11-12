@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}
+    Calendário de Reservas de Salas
+{% endblock %}
+
+{% block 'conteudo' %}
+<html lang="pt-br">
+<head>
+    <!-- Define o design da tabela -->
+    <style>
+        .titulo {
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #1D2B4E;
+            color: white;
+        }
+
+        td ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        td ul li {
+            list-style-type: none;
+            margin-bottom: 5px;
+        }
+        tr {
+            background-color: #ffff99;
+        }
+    </style>
+</head>
+<body>
+    <!-- Título da página -->
+    <h1 class="titulo">Calendário de Reservas de Salas</h1>
+
+    <!-- Tabela para exibir eventos do calendário -->
+    <table>
+        <!-- Cabeçalho da tabela -->
+        <thead>
+            <tr>
+                <!-- Define os cabeçalhos das colunas -->
+                <th>Data de Solicitação</th>
+                <th>Data de Reserva</th>
+                <th>Data de Devolução</th>
+                <th>Detalhes da Reserva</th>
+            </tr>
+        </thead>
+        <!-- Corpo da tabela -->
+        <tbody>
+            <!-- Loop através dos eventos -->
+            {% for evento in eventos %}
+                <tr>
+                    <!-- Exibe a data de solicitação do primeiro evento na lista no formato brasileiro -->
+                    <td>{{ evento.eventos.0.data_solicitacao }}</td>
+                    <!-- Exibe a data e hora da reserva do primeiro evento na lista no formato brasileiro -->
+                    <td>{{ evento.eventos.0.start }}</td>
+                    <!-- Exibe a data e hora da devolução do primeiro evento na lista no formato brasileiro -->
+                    <td>{{ evento.eventos.0.end }}</td>
+
+                    <td>
+                        <!-- Lista de eventos para a data específica -->
+                        <ul>
+                            <!-- Loop através dos eventos na data -->
+                            {% for evento_na_data in evento.eventos %}
+                                <li>
+                                    <!-- Exibe o título do evento e o nome da sala -->
+                                    {{ evento_na_data.title }}  {{ evento_na_data.salas.nome_da_sala }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+{% endblock %}

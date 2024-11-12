@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block 'conteudo' %}
+
+<div class="container">
+    <br>
+    <div class="row">
+        <!-- Coluna para os detalhes da Sala -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title" style="font-weight: bold; color: black;">Sala: </h5><span class="card-text" style="font-weight: normal; color: black;">{{ Reservas.0.salas }}</span>
+                    
+                    {% for reserva in Reservas %}
+                    <p class="card-text" style="font-weight: normal; color: black;">
+                        <br><strong>Data da reserva:</strong><br>
+                        {{ reserva.data_reserva }}
+                    </p>
+                    <p class="card-text" style="font-weight: normal; color: black;">
+                        <strong>Solicitante:</strong><br>
+                        {{ reserva.usuarios }}
+                    </p>
+                    <p class="card-text" style="font-weight: normal; color: black;">
+                        <strong>Data da Devolução:</strong><br>
+                        {{ reserva.data_devolucao }}
+                    </p>
+                    <p class="card-text" style="font-weight: normal; color: black;">
+                        <strong>Data da solicitação:</strong><br>
+                        {{ reserva.data_solicitacao }}
+                    </p>
+                    <hr>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna para o histórico de reservas da Sala -->
+        <!-- <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Histórico de Reservas
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for reserva in Reservas %}
+                    <li class="list-group-item">
+                        <strong>Usuário:</strong> {{ reserva.usuarios }}<br>
+                        <strong>Data da reserva:</strong> {{ reserva.data_reserva }}<br>
+                        <strong>Data da devolução:</strong> {{ reserva.data_devolucao }}<br>
+                        <strong>Data da solicitação:</strong> {{ reserva.data_solicitacao }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+{% endblock %}

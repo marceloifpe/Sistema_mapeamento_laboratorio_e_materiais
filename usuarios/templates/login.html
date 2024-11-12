@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Login{% endblock %}
+
+{% block 'conteudo' %}
+
+<div class="container">
+    <br>
+    {% if status == '1' %}
+    <div class="alert alert-danger" role="alert">
+        Email e Senha inválidos!
+    </div>
+    {% endif %}
+
+    {% if status == '2' %}
+    <div class="alert alert-danger" role="alert">
+        Realize o login para acessar o sistema!
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-md-3">
+
+        </div>
+
+        <div class="col-md">
+            <h1>Login</h1>
+            <hr>
+
+            <form method="post" action="{% url 'valida_login' %}" onsubmit="return validarFormulario()"> {% csrf_token %}
+                <label>E-mail</label>
+                <input name="email" class="form-control" type="text" placeholder="@ufrpe.br">
+                <br>
+                <label>Senha</label>
+                <div class="input-group">
+                    <input name="senha" id="senha" class="form-control" type="password"
+                        placeholder="mínimo de 8 caracteres">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <input type="checkbox" onclick="mostrarSenha()"> Mostrar Senha
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <input class="btn btn-primary" type="submit" value="Enviar">
+                <a href="{% url 'cadastro' %}" class="btn btn-secondary">Cadastre-se</a>
+            </form>
+        </div>
+
+        <div class="col-md-3">
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function mostrarSenha() {
+        var senhaInput = document.getElementById("senha");
+        if (senhaInput.type === "password") {
+            senhaInput.type = "text";
+        } else {
+            senhaInput.type = "password";
+        }
+    }
+</script>
+
+{% endblock %}

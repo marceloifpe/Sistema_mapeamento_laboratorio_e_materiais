@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %} Cadastro {% endblock %}
+
+{% block 'conteudo' %}
+
+<div class="container">
+    <br>
+    {% if status == '0' %}
+    <div class="alert alert-success" role="alert">
+        Cadastro realizado com sucesso!
+    </div>
+    {% endif %}
+
+    {% if status == '1' %}
+    <div class="alert alert-danger" role="alert">
+        Nome e Email não podem estar vazios!
+    </div>
+    {% endif %}
+
+    {% if status == '2' %}
+    <div class="alert alert-danger" role="alert">
+        Por favor, insira um e-mail válido da UFRPE!
+    </div>
+    {% endif %}
+
+    {% with status_list='3 4 5 6 7' %}
+    {% if status in status_list.split %}
+    <div class="alert alert-danger" role="alert">
+        Sua senha deve ter no mínimo 8 caracteres considerando: letras maiúsculas e minúsculas, números e caracteres
+        especiais!
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% if status == '8' %}
+    <div class="alert alert-danger" role="alert">
+        Usuário já existente no sistema!
+    </div>
+    {% endif %}
+
+    {% if status == '9' %}
+    <div class="alert alert-danger" role="alert">
+        Erro no sistema!
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-3">
+
+        </div>
+
+        <div class="col-md">
+            <h1>Criar minha conta</h1>
+            <hr>
+
+            <form method="post" action="{% url 'valida_cadastro' %}" onsubmit="return validarFormulario()"> {% csrf_token %}
+                <label>Nome Completo</label>
+                <input name="nome" id="nomeInput" class="form-control" type="text" oninput="converterMaiusculas(this)">
+                <br>
+                <label>E-mail</label>
+                <input name="email" class="form-control" type="text" placeholder="@ufrpe.br">
+                <br>
+                <label>Senha</label>
+                <div class="input-group">
+                    <input name="senha" id="senha" class="form-control" type="password"
+                        placeholder="mínimo de 8 caracteres">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <input type="checkbox" onclick="mostrarSenha()"> Mostrar Senha
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <input class="btn btn-primary" type="submit" value="Enviar">
+                <a href="{% url 'login' %}" class="btn btn-secondary">Login</a>
+            </form>
+        </div>
+
+        <div class="col-md-3">
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function converterMaiusculas(input) {
+        input.value = input.value.toUpperCase();
+    }
+
+    function mostrarSenha() {
+        var senhaInput = document.getElementById("senha");
+        if (senhaInput.type === "password") {
+            senhaInput.type = "text";
+        } else {
+            senhaInput.type = "password";
+        }
+    }
+</script>
+
+{% endblock %}

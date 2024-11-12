@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Materiais Cadastrados{% endblock %}
+
+{% block 'conteudo' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Listando os Materiais</title>
+    <style>
+        /* Estilos para responsividade */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .titulo {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .lista-materiais {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .material-item {
+            background-color: #1f3154; /* Alterando a cor de fundo */
+            color: #fff; /* Alterando a cor do texto para branco */
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .material-item .acoes {
+            display: flex;
+            align-items: center;
+        }
+
+        .material-item .acoes a {
+            margin-left: 10px;
+            color: #fff; /* Cor dos ícones */
+            transition: color 0.3s ease;
+            text-decoration: none;
+        }
+
+        .material-item .acoes a:hover {
+            color: #ccc; /* Cor ao passar o mouse */
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .material-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .material-item .acoes {
+                margin-top: 10px;
+            }
+
+            .material-item .acoes a {
+                margin: 0 5px;
+            }
+        }
+
+        /* Botão Cadastrar à direita */
+        .btn-cadastrar {
+            float: right;
+            background-color: #1D2B4E; /* Azul Bootstrap */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-cadastrar svg {
+            fill: white;
+            margin-right: 5px;
+        }
+
+        .btn-cadastrar:hover {
+            background-color: #0056b3; /* Azul mais escuro Bootstrap */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="titulo">Materiais Cadastrados</h1>
+
+        <button class="btn btn-primary btn-cadastrar" onclick="location.href = '{% url 'gestor:material_create' %}'"
+            title="Cadastrar Novo Material">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
+            Cadastrar Novo Material
+        </button>
+        <br>
+
+        <ul class="lista-materiais">
+            <br>
+            {% for material in object_list %}
+            <li class="material-item">
+                <div>
+                    <strong>{{ material.nome_do_material }}</strong> 
+                </div>
+                <div class="acoes">
+                    <a href="{% url 'gestor:material_edit' pk=material.id %}" class="icone" style="animation: slideInLeft 0.5s ease;"
+                        title="Editar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFFFFF"
+                            class="bi bi-pencil" viewBox="0 0 16 16">
+                            <path
+                                d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325" />
+                        </svg>
+                    </a>
+                    <a href="{% url 'gestor:material_detail' pk=material.id %}" class="icone" style="animation: slideInLeft 0.5s ease;"
+                        title="Visualizar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFFFFF"
+                            class="bi bi-eye" viewBox="0 0 16 16">
+                            <path
+                                d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+                            <path
+                                d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+                        </svg>
+                    </a>
+                    <a href="{% url 'gestor:material_delete' pk=material.id %}" class="icone" style="animation: slideInLeft 0.5s ease;"
+                        title="Deletar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#FFFFFF"
+                            class="bi bi-trash3" viewBox="0 0 16 16">
+                            <path
+                                d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                        </svg>
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+
+</html>
+
+{% endblock %}

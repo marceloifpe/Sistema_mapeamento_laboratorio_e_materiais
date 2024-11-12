@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Home{% endblock %}
+
+{% block 'conteudo' %}
+{% load %}
+<div class="container">
+    <br>
+    <br>
+
+    <!-- Título da Página -->
+    <h1 class="display-4">Reserva realizada com sucesso!
+
+    </h1>
+
+    <br>
+    <br>
+    <!-- Exibição das Salas -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md">
+
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                        <a href="{% url 'professor:homee' %}" class="btn btn-primary">Ir para tela inicial</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <br>
+
+</div>
+<br>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+{% endblock %}

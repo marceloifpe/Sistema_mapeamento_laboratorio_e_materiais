@@ -1,0 +1,12 @@
+Instalação dos requirements
+
+pip install -r requirements.txt
+
+Ativação do ambiente virtual
+
+.\venv\Scripts\Activate
+
+Atualização do banco de dados
+
+python manage.py makemigrations
+python manage.py migrate
