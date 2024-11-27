@@ -1,0 +1,15 @@
+{
+    "usuarios": {
+      "user_id_1": {
+        "nome": "João Silva",
+        "email": "joao.silva@ufrpe.br",
+        "senha": "senha_hash_1"
+      },
+      "admin": {
+        "nome": "Administrador",
+        "email": "admin@ufrpe.br",
+        "senha": "senha_hash_admin"
+      }
+    }
+  }
+  
