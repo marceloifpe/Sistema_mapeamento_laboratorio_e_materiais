@@ -51,7 +51,7 @@
             <!-- Card para o calendário de Reservas de Salas -->
             <div class="card mt-4">
                 <div class="card-body">
-                    <h5 class="card-title"> Calendário de Reservas de Salas</h5>
+                    <h5 class="card-title">Calendário de Reservas de Salas</h5>
                     <p class="card-text">Veja as reservas das Salas no calendário.</p>
                     <a href="{% url 'gestor:reservas_salas' %}" class="btn btn-primary">Ver Calendário</a>
                 </div>
@@ -59,11 +59,20 @@
 
             <!-- Card para o Cadastro de Salas -->
             <div class="card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Cadastro de Salas</h5>
-                        <p class="card-text">Cadastar/Editar/Apagar Salas.</p>
-                        <a href="{% url 'gestor:sala_list' %}" class="btn btn-primary">Cadastrar Salas</a>
-                    </div>
+                <div class="card-body">
+                    <h5 class="card-title">Cadastro de Salas</h5>
+                    <p class="card-text">Cadastar/Editar/Apagar Salas.</p>
+                    <a href="{% url 'gestor:sala_list' %}" class="btn btn-primary">Cadastrar Salas</a>
+                </div>
+            </div>
+
+            <!-- Card para o ranking de Salas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Ranking de Salas</h5>
+                    <p class="card-text">Veja o ranking das salas mais reservadas.</p>
+                    <a href="{% url 'gestor:ranking_salas' %}" class="btn btn-primary">Ver Ranking de Salas</a>
+                </div>
             </div>
         </div>
 
@@ -87,7 +96,7 @@
                 </div>
             </div>
 
-            <!-- Card para o calendario de Reservas de Materiais -->
+            <!-- Card para o calendário de Reservas de Materiais -->
             <div class="card mt-4">
                 <div class="card-body">
                     <h5 class="card-title">Calendário Reservas de Materiais</h5>
@@ -96,13 +105,22 @@
                 </div>
             </div>
 
-            <!-- Card para o cadastro de materiais-->
+            <!-- Card para o cadastro de materiais -->
             <div class="card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Cadastro de Materiais</h5>
-                        <p class="card-text">Cadastar/Editar/Apagar Materiais.</p>
-                        <a href="{% url 'gestor:material_list' %}" class="btn btn-primary">Cadastrar Materiais</a>
-                    </div>
+                <div class="card-body">
+                    <h5 class="card-title">Cadastro de Materiais</h5>
+                    <p class="card-text">Cadastar/Editar/Apagar Materiais.</p>
+                    <a href="{% url 'gestor:material_list' %}" class="btn btn-primary">Cadastrar Materiais</a>
+                </div>
+            </div>
+
+            <!-- Card para o ranking de Materiais -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Ranking de Materiais</h5>
+                    <p class="card-text">Veja o ranking dos materiais mais Reservados.</p>
+                    <a href="{% url 'gestor:ranking_materiais' %}" class="btn btn-primary">Ver Ranking de Materiais</a>
+                </div>
             </div>
         </div>
     </div>

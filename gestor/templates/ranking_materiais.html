@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Ranking de Materiais{% endblock %}
+
+{% block 'conteudo' %}
+<center>
+    <h1>Ranking de Materiais</h1>
+</center>
+
+<div align="left">
+    <form method="GET">
+        <label for="ano">Filtrar por ano:</label>
+        <select name="ano" id="ano">
+            <option value="">Todos os Anos</option>
+            {% for ano in anos %}
+                <option value="{{ ano }}">{{ ano }}</option>
+            {% endfor %}
+        </select>
+        <label for="mes">Filtrar por mês:</label>
+        <select name="mes" id="mes">
+            <option value="">Todos os Meses</option>
+            {% for mes, mes_nome in meses %}
+                <option value="{{ mes }}">{{ mes_nome }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Filtrar</button>
+    </form>
+</div>
+
+<center>
+    <img src="data:image/png;base64,{{ grafico_materiais }}" alt="Gráfico de Reservas de Materiais">
+    <ul>
+        {% for material in materiais %}
+            <li><strong>{{ material.nome_do_material }}</strong> - {{ material.quantidade }} unidades</li>
+        {% empty %}
+            <li>Nenhum material encontrado.</li>
+        {% endfor %}
+    </ul>
+</center>
+{% endblock %}
