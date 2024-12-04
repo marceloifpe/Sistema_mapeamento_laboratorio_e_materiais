@@ -18,6 +18,8 @@ from django.db.models import F
 from itertools import groupby
 from .models import Reserva
 from django.utils import timezone
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 
 
 def home(request):
@@ -308,3 +310,131 @@ class MaterialDeleteView(DeleteView):
     model = Materiais
     template_name = 'material_confirm_delete.html'
     success_url = reverse_lazy('gestor:material_list')   
+    
+# gerando gráfico de ranking materias/salas com chart.js e matplot
+import matplotlib.pyplot as plt
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.views.generic import ListView
+from django.db.models import Count
+from io import BytesIO
+import base64
+from .models import Salas, Materiais, Reservas, Reserva
+from datetime import datetime
+
+class RankingSalasView(ListView):
+    model = Salas
+    template_name = 'ranking_salas.html'
+    context_object_name = 'salas'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Verificando se o usuário está logado
+        if self.request.session.get('usuario'):
+            try:
+                usuario = Usuario.objects.get(id=self.request.session['usuario'])
+                context['usuario_logado2'] = usuario
+            except Usuario.DoesNotExist:
+                context['usuario_logado2'] = None
+        else:
+            context['usuario_logado2'] = None
+
+        ano = self.request.GET.get('ano')
+        mes = self.request.GET.get('mes')
+
+        if ano and mes:
+            reservas_filtradas = Reservas.objects.filter(data_reserva__year=int(ano), data_reserva__month=int(mes))
+        elif ano:
+            reservas_filtradas = Reservas.objects.filter(data_reserva__year=int(ano))
+        elif mes:
+            reservas_filtradas = Reservas.objects.filter(data_reserva__month=int(mes))
+        else:
+            reservas_filtradas = Reservas.objects.all()
+
+        salas = Salas.objects.filter(reservas__in=reservas_filtradas).annotate(num_reservas=Count('reservas')).order_by('-num_reservas')
+
+        context['anos'] = [ano.year for ano in Reservas.objects.dates('data_reserva', 'year')]
+        meses = [
+            (1, "Janeiro"), (2, "Fevereiro"), (3, "Março"), (4, "Abril"),
+            (5, "Maio"), (6, "Junho"), (7, "Julho"), (8, "Agosto"),
+            (9, "Setembro"), (10, "Outubro"), (11, "Novembro"), (12, "Dezembro")
+        ]
+        context['meses'] = meses
+        context['salas'] = salas
+
+        sala_names = [sala.nome_da_sala for sala in salas]
+        reservation_counts = [sala.num_reservas for sala in salas]
+
+        plt.figure(figsize=(10, 5))
+        plt.bar(sala_names, reservation_counts)
+        plt.xlabel('Salas')
+        plt.ylabel('Número de Reservas')
+        plt.title('Ranking de Salas Mais Reservadas')
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        context['grafico_salas'] = image_base64
+
+        return context
+
+class RankingMateriaisView(ListView):
+    model = Materiais
+    template_name = 'ranking_materiais.html'
+    context_object_name = 'materiais'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Verificando se o usuário está logado
+        usuario_id = self.request.session.get('usuario')
+        if usuario_id:
+            context['usuario_logado2'] = Usuario.objects.filter(id=usuario_id).first()
+        else:
+            context['usuario_logado2'] = None
+
+        ano = self.request.GET.get('ano')
+        mes = self.request.GET.get('mes')
+
+        if ano and mes:
+            reservas_filtradas = Reserva.objects.filter(data_reserva__year=int(ano), data_reserva__month=int(mes))
+        elif ano:
+            reservas_filtradas = Reserva.objects.filter(data_reserva__year=int(ano))
+        elif mes:
+            reservas_filtradas = Reserva.objects.filter(data_reserva__month=int(mes))
+        else:
+            reservas_filtradas = Reserva.objects.all()
+
+        materiais = Materiais.objects.filter(reserva__in=reservas_filtradas).annotate(num_reservas=Count('reserva')).order_by('-num_reservas')
+
+        context['anos'] = [ano.year for ano in Reserva.objects.dates('data_reserva', 'year')]
+        meses = [
+            (1, "Janeiro"), (2, "Fevereiro"), (3, "Março"), (4, "Abril"),
+            (5, "Maio"), (6, "Junho"), (7, "Julho"), (8, "Agosto"),
+            (9, "Setembro"), (10, "Outubro"), (11, "Novembro"), (12, "Dezembro")
+        ]
+        context['meses'] = meses
+        context['materiais'] = materiais
+
+        material_names = [material.nome_do_material for material in materiais]
+        reservation_counts = [material.num_reservas for material in materiais]
+
+        if material_names and reservation_counts:
+            plt.figure(figsize=(10, 5))
+            plt.bar(material_names, reservation_counts)
+            plt.xlabel('Materiais')
+            plt.ylabel('Número de Reservas')
+            plt.title('Ranking de Materiais Mais Reservados')
+
+            buf = BytesIO()
+            plt.savefig(buf, format='png')
+            buf.seek(0)
+            image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+            context['grafico_materiais'] = image_base64
+            plt.close()
+        else:
+            context['grafico_materiais'] = None
+
+        return context

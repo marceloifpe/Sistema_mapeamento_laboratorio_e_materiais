@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}Ranking de Salas{% endblock %}
+
+{% block 'conteudo' %}
+<center>
+    <h1>Ranking de Salas</h1>
+</center>
+
+<div align="left">
+    <form method="GET">
+        <label for="ano">Filtrar por ano:</label>
+        <select name="ano" id="ano">
+            <option value="">Todos os Anos</option>
+            {% for ano in anos %}
+                <option value="{{ ano }}">{{ ano }}</option>
+            {% endfor %}
+        </select>
+        <label for="mes">Filtrar por mês:</label>
+        <select name="mes" id="mes">
+            <option value="">Todos os Meses</option>
+            {% for mes, mes_nome in meses %}
+                <option value="{{ mes }}">{{ mes_nome }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Filtrar</button>
+    </form>
+</div>
+
+<center>
+    <canvas id="salasChart" width="400" height="200"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('salasChart').getContext('2d');
+        var salasData = {
+            labels: [{% for sala in salas %}'{{ sala.nome_da_sala }}',{% endfor %}],
+            datasets: [{
+                label: 'Reservas',
+                data: [{% for sala in salas %}{{ sala.num_reservas }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+        var salasChart = new Chart(ctx, {
+            type: 'bar',
+            data: salasData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                tooltips: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            return 'Reservas: ' + tooltipItem.raw;
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</center>
+{% endblock %}
