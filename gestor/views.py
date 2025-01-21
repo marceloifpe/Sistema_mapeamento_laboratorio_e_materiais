@@ -22,6 +22,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 
+
 def home(request):
     # Verifica se há um usuário na sessão
     if request.session.get('usuario'):
@@ -310,6 +311,120 @@ class MaterialDeleteView(DeleteView):
     model = Materiais
     template_name = 'material_confirm_delete.html'
     success_url = reverse_lazy('gestor:material_list')
+
+# from django.shortcuts import render
+# from django.views.generic import ListView
+# from .models import Usuario
+import firebase_admin
+from firebase_admin import firestore
+from django.shortcuts import get_object_or_404, redirect
+from django.http import Http404
+from django.views.generic import ListView
+
+
+# Verifica se o app do Firebase já foi inicializado
+if not firebase_admin._apps:
+    cred = firebase_admin.credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json')
+    firebase_admin.initialize_app(cred)
+
+# Obtendo a referência ao Firestore
+db = firestore.client()
+
+# Função para buscar usuários do Firebase
+def get_firebase_users():
+    users_ref = db.collection('usuarios')
+    users = users_ref.stream()
+    firebase_users = []
+    for user in users:
+        firebase_users.append({
+            'id': user.id,  # Captura o ID do documento Firebase
+            'nome': user.to_dict().get('nome'),
+            'email': user.to_dict().get('email')
+        })
+    return firebase_users
+
+
+# Função para deletar usuário
+from django.shortcuts import get_object_or_404, redirect
+from django.http import Http404
+from firebase_admin import firestore
+
+# Obtendo a referência ao Firestore
+db = firestore.client()
+
+def deletar_usuario(request, usuario_id):
+    print(f"Tentando excluir o usuário com ID: {usuario_id}")  # Debugging
+    try:
+        # Excluir do banco local (Django) se o ID for numérico
+        if usuario_id.isnumeric():  # Verifica se o ID é numérico
+            usuario_local = get_object_or_404(Usuario, id=int(usuario_id))  # Converte para int
+            usuario_local.delete()
+
+        # Excluir do Firebase
+        user_ref = db.collection('usuarios').document(usuario_id)  # Firebase
+        user_ref.delete()
+
+        return redirect('/gestor/usuarios/')
+    except Exception as e:
+        print(f"Erro ao excluir usuário: {e}")
+        raise Http404("Usuário não encontrado ou não pode ser excluído.")
+
+
+
+
+class UsuarioListView(ListView):
+    model = Usuario
+    template_name = 'usuarios_cadastrados.html'
+    context_object_name = 'usuarios'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Buscar usuários do banco de dados local (Django)
+        usuarios_locais = Usuario.objects.all()
+
+        # Buscar usuários do Firebase
+        usuarios_firebase = get_firebase_users()
+
+        # Concatenando as duas listas
+        context['usuarios'] = list(usuarios_locais) + usuarios_firebase
+
+        # Passa o usuário logado para o contexto
+        context['usuario_logado2'] = self.request.user
+        return context
+
+
+
+# from django.views.generic import ListView
+# from .models import Usuario funciona
+
+# class UsuarioListView(ListView):
+#     model = Usuario
+#     template_name = 'usuarios_cadastrados.html'  # O template que você usa
+#     context_object_name = 'usuarios'  # Corrigido para 'usuarios'
+
+#     # Passa o usuário logado para o contexto
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['usuario_logado2'] = self.request.user
+#         return context
+
+
+
+
+# class UsuarioListView(ListView):
+#     model = Usuario  # Ou seu modelo de usuário customizado, como Usuario
+#     template_name = 'gestor/usuarios_cadastrados.html'  # O template que você está usando
+#     context_object_name = 'usuarios'  # Nome que você usará no template para acessar os dados
+#     # Se você quiser passar o usuário logado para o template
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['usuario_logado'] = self.request.user  # Passa o usuário logado para o template
+#         return context
+
+# def usuarios_cadastrados(request):
+#     usuarios = Usuario.objects.all()  # Pega todos os usuários cadastrados
+#     return render(request, 'gestor/usuarios_cadastrados.html', {'usuarios': usuarios})
 
 # gerando gráfico de ranking materias/salas com chart.js e matplot
 import matplotlib.pyplot as plt
