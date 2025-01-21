@@ -7,6 +7,7 @@ from .views import reservas_salas
 from .views import SalaListView, SalaCreateView, SalaUpdateView, SalaDetailView, SalaDeleteView
 from .views import MaterialListView, MaterialCreateView, MaterialUpdateView, MaterialDetailView, MaterialDeleteView
 from .views import RankingSalasView, RankingMateriaisView
+from .views import UsuarioListView
 
 app_name = 'gestor'
 
@@ -28,8 +29,12 @@ urlpatterns = [
     path('materiais/<int:pk>/editar/', MaterialUpdateView.as_view(), name='material_edit'),
     path('materiais/<int:pk>/detalhes/', MaterialDetailView.as_view(), name='material_detail'),
     path('materiais/<int:pk>/excluir/', MaterialDeleteView.as_view(), name='material_delete'),
-    
+
     # Novas URLs para rankings
     path('ranking_salas/', RankingSalasView.as_view(), name='ranking_salas'),
     path('ranking_materiais/', RankingMateriaisView.as_view(), name='ranking_materiais'),
+    # path('usuarios_cadastrados/', views.usuarios_cadastrados, name='usuarios_cadastrados'),
+    # path('usuarios_cadastrados/', views.usuarios_cadastrados, name='usuarios_cadastrados'),
+    path('usuarios/', UsuarioListView.as_view(), name='usuarios_cadastrados'),
+    path('usuarios/deletar/<str:usuario_id>/', views.deletar_usuario, name='deletar_usuario'),
 ]

@@ -33,6 +33,7 @@
             {% if usuario_logado2 %}
             <div class="d-flex">
                 <a href="{% url 'gestor:home' %}" class="btn btn-secondary ms-2">Home</a>
+                <a href="{% url 'gestor:usuarios_cadastrados' %}" class="btn btn-info ms-2">Usuários Cadastrados</a>
                 <a href="{% url 'sair' %}" class="btn btn-danger ms-2">Sair</a>
             </div>
             {% endif %}
