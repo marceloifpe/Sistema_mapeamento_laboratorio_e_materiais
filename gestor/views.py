@@ -39,7 +39,7 @@ def home(request):
 
             # Renderiza o template 'home.html' com o contexto
             return render(request, 'home.html', context)
-        
+
         except Usuario.DoesNotExist:
             # Trata o caso em que o usuário não existe
             return render(request, 'error.html', {'message': 'Usuário não existe'})
@@ -47,7 +47,7 @@ def home(request):
     else:
         # Redireciona para a página de login se não houver usuário na sessão
         return redirect('/auth/login/?status=2')
-    
+
 # Função para o gestor visualizar as salas
 
 def gestor_ver_salas(request):
@@ -180,7 +180,7 @@ def calendario_reservas_materiais(request):
     else:
         messages.warning(request, 'Faça login para acessar o calendário de reservas.')
         return redirect('/auth/login/?status=2')
-    
+
 def reservas_materiais(request):
     if request.session.get('usuario'):
         try:
@@ -268,7 +268,7 @@ class SalaUpdateView(UpdateView):
     form_class = SalaForm
     template_name = 'sala_form.html'
     success_url = reverse_lazy('gestor:sala_list')
-    
+
 class SalaDetailView(DetailView):
     model = Salas
     template_name = 'sala_detail.html'
@@ -279,7 +279,7 @@ class SalaDeleteView(DeleteView):
     template_name = 'sala_confirm_delete.html'
     success_url = reverse_lazy('gestor:sala_list')
 
-#CRUD Materiais    
+#CRUD Materiais
 class MaterialListView(ListView):
     model = Materiais
     template_name = 'material_list.html'
@@ -287,20 +287,20 @@ class MaterialListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['usuario_logado2'] = self.request.user  # Adicione esta linha para passar o usuário logado para o template
-        return context    
+        return context
 
 class MaterialCreateView(CreateView):
     model = Materiais
     form_class = MaterialForm
     template_name = 'material_form.html'
-    success_url = reverse_lazy('gestor:material_list') 
+    success_url = reverse_lazy('gestor:material_list')
 
 class MaterialUpdateView(UpdateView):
     model = Materiais
     form_class = MaterialForm
     template_name = 'material_form.html'
     success_url = reverse_lazy('gestor:material_list')
-    
+
 class MaterialDetailView(DetailView):
     model = Materiais
     template_name = 'material_detail.html'
@@ -309,8 +309,8 @@ class MaterialDetailView(DetailView):
 class MaterialDeleteView(DeleteView):
     model = Materiais
     template_name = 'material_confirm_delete.html'
-    success_url = reverse_lazy('gestor:material_list')   
-    
+    success_url = reverse_lazy('gestor:material_list')
+
 # gerando gráfico de ranking materias/salas com chart.js e matplot
 import matplotlib.pyplot as plt
 from django.http import HttpResponse
@@ -418,23 +418,13 @@ class RankingMateriaisView(ListView):
         context['meses'] = meses
         context['materiais'] = materiais
 
+        # Dados para o gráfico de Chart.js
         material_names = [material.nome_do_material for material in materiais]
         reservation_counts = [material.num_reservas for material in materiais]
 
-        if material_names and reservation_counts:
-            plt.figure(figsize=(10, 5))
-            plt.bar(material_names, reservation_counts)
-            plt.xlabel('Materiais')
-            plt.ylabel('Número de Reservas')
-            plt.title('Ranking de Materiais Mais Reservados')
-
-            buf = BytesIO()
-            plt.savefig(buf, format='png')
-            buf.seek(0)
-            image_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-            context['grafico_materiais'] = image_base64
-            plt.close()
-        else:
-            context['grafico_materiais'] = None
+        context['grafico_materiais'] = {
+            'labels': material_names,
+            'data': reservation_counts
+        }
 
         return context

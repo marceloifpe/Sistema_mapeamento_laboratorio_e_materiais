@@ -27,14 +27,44 @@
     </form>
 </div>
 
-<center>
-    <img src="data:image/png;base64,{{ grafico_materiais }}" alt="Gráfico de Reservas de Materiais">
-    <ul>
-        {% for material in materiais %}
-            <li><strong>{{ material.nome_do_material }}</strong> - {{ material.quantidade }} unidades</li>
-        {% empty %}
-            <li>Nenhum material encontrado.</li>
-        {% endfor %}
-    </ul>
-</center>
+<div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 70vh; padding: 20px;">
+    <canvas id="materiaisChart" style="width: 100%; height: 100%;"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('materiaisChart').getContext('2d');
+    var materiaisData = {
+        labels: [{% for nome in grafico_materiais.labels %}'{{ nome }}',{% endfor %}],
+        datasets: [{
+            label: 'Reservas de Materiais',
+            data: [{% for count in grafico_materiais.data %}{{ count }},{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',  // Cor de fundo
+            borderColor: 'rgba(54, 162, 235, 1)',  // Cor da borda
+            borderWidth: 1
+        }]
+    };
+
+    var materiaisChart = new Chart(ctx, {
+        type: 'bar',  // Tipo de gráfico (barra)
+        data: materiaisData,
+        options: {
+            responsive: true,  // Torna o gráfico responsivo
+            maintainAspectRatio: false,  // Permite que a altura seja ajustada
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            tooltips: {
+                enabled: true,
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return 'Reservas: ' + tooltipItem.raw;
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

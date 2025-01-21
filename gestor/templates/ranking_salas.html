@@ -27,40 +27,44 @@
     </form>
 </div>
 
-<center>
-    <canvas id="salasChart" width="400" height="200"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        var ctx = document.getElementById('salasChart').getContext('2d');
-        var salasData = {
-            labels: [{% for sala in salas %}'{{ sala.nome_da_sala }}',{% endfor %}],
-            datasets: [{
-                label: 'Reservas',
-                data: [{% for sala in salas %}{{ sala.num_reservas }},{% endfor %}],
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        };
-        var salasChart = new Chart(ctx, {
-            type: 'bar',
-            data: salasData,
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                tooltips: {
-                    enabled: true,
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            return 'Reservas: ' + tooltipItem.raw;
-                        }
+<div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 70vh; padding: 20px;">
+    <canvas id="salasChart" style="width: 100%; height: 100%;"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('salasChart').getContext('2d');
+    var salasData = {
+        labels: [{% for sala in salas %}'{{ sala.nome_da_sala }}',{% endfor %}],
+        datasets: [{
+            label: 'Reservas',
+            data: [{% for sala in salas %}{{ sala.num_reservas }},{% endfor %}],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    var salasChart = new Chart(ctx, {
+        type: 'bar',
+        data: salasData,
+        options: {
+            responsive: true,  // Torna o gráfico responsivo
+            maintainAspectRatio: false,  // Permite que a altura seja ajustada
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            tooltips: {
+                enabled: true,
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return 'Reservas: ' + tooltipItem.raw;
                     }
                 }
             }
-        });
-    </script>
-</center>
+        }
+    });
+</script>
 {% endblock %}
