@@ -316,7 +316,7 @@ class MaterialDeleteView(DeleteView):
 # from django.views.generic import ListView
 # from .models import Usuario
 import firebase_admin
-from firebase_admin import firestore
+from firebase_admin import auth, credentials, firestore
 from django.shortcuts import get_object_or_404, redirect
 from django.http import Http404
 from django.views.generic import ListView
@@ -343,15 +343,7 @@ def get_firebase_users():
         })
     return firebase_users
 
-
-# Função para deletar usuário
-from django.shortcuts import get_object_or_404, redirect
-from django.http import Http404
-from firebase_admin import firestore
-
-# Obtendo a referência ao Firestore
-db = firestore.client()
-
+# Função para excluir o usuário
 def deletar_usuario(request, usuario_id):
     print(f"Tentando excluir o usuário com ID: {usuario_id}")  # Debugging
     try:
@@ -360,17 +352,25 @@ def deletar_usuario(request, usuario_id):
             usuario_local = get_object_or_404(Usuario, id=int(usuario_id))  # Converte para int
             usuario_local.delete()
 
-        # Excluir do Firebase
-        user_ref = db.collection('usuarios').document(usuario_id)  # Firebase
-        user_ref.delete()
+        # Excluir do Firebase Authentication
+        try:
+            auth.delete_user(usuario_id)  # Exclui o usuário do Firebase Authentication
+            print(f"Usuário {usuario_id} excluído do Firebase Authentication com sucesso.")
+        except auth.UserNotFoundError:
+            print(f"Usuário {usuario_id} não encontrado no Firebase Authentication.")
 
+        # Excluir do Firestore
+        db = firestore.client()
+        user_ref = db.collection('usuarios').document(usuario_id)  # Referência ao Firestore
+        user_ref.delete()
+        print(f"Usuário {usuario_id} excluído do Firestore com sucesso.")
+
+        # Redireciona de volta para a lista de usuários
         return redirect('/gestor/usuarios/')
+
     except Exception as e:
         print(f"Erro ao excluir usuário: {e}")
         raise Http404("Usuário não encontrado ou não pode ser excluído.")
-
-
-
 
 class UsuarioListView(ListView):
     model = Usuario
@@ -386,12 +386,44 @@ class UsuarioListView(ListView):
         # Buscar usuários do Firebase
         usuarios_firebase = get_firebase_users()
 
-        # Concatenando as duas listas
+        # Ocultar o usuário com o email 'admin@ufrpe.br' da lista de usuários locais
+        usuarios_locais = usuarios_locais.exclude(email='admin@ufrpe.br')
+
+        # Ocultar o usuário com o email 'admin@ufrpe.br' da lista de usuários do Firebase
+        usuarios_firebase = [user for user in usuarios_firebase if user.get('email') != 'admin@ufrpe.br']
+
+        # Concatenando as duas listas (filtradas)
         context['usuarios'] = list(usuarios_locais) + usuarios_firebase
 
         # Passa o usuário logado para o contexto
         context['usuario_logado2'] = self.request.user
         return context
+
+
+
+
+
+# mostrar todos usuario até admin
+# class UsuarioListView(ListView):
+#     model = Usuario
+#     template_name = 'usuarios_cadastrados.html'
+#     context_object_name = 'usuarios'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+
+#         # Buscar usuários do banco de dados local (Django)
+#         usuarios_locais = Usuario.objects.all()
+
+#         # Buscar usuários do Firebase
+#         usuarios_firebase = get_firebase_users()
+
+#         # Concatenando as duas listas
+#         context['usuarios'] = list(usuarios_locais) + usuarios_firebase
+
+#         # Passa o usuário logado para o contexto
+#         context['usuario_logado2'] = self.request.user
+#         return context
 
 
 
