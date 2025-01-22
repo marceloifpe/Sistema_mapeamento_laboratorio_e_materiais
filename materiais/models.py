@@ -18,7 +18,7 @@ db = firestore.client()
 class Materiais(models.Model):
     nome_do_material = models.CharField(max_length=30)
     reservado = models.BooleanField(default=False)
-    
+
     class Meta:
         verbose_name = 'Material'
 
@@ -40,10 +40,10 @@ class Reserva(models.Model):
     data_devolucao = models.DateTimeField()
     data_solicitacao = models.DateTimeField(auto_now_add=True)
     materiais = models.ForeignKey(Materiais, on_delete=models.DO_NOTHING)
-    
+
     class Meta:
         verbose_name = 'Reserva'
-    
+
     def __str__(self) -> str:
         return f"{self.usuarios} | {self.materiais}"
 
@@ -72,12 +72,12 @@ class Reserva(models.Model):
     def save(self, *args, **kwargs):
         # Valida os dados antes de salvar
         self.clean()
-        
+
         # Salva o objeto no banco de dados do Django
         super(Reserva, self).save(*args, **kwargs)
-        
+
         # Adiciona a reserva à coleção 'reservas' no Firestore
-        reserva_ref = db.collection('reservas').document(str(self.id))
+        reserva_ref = db.collection('reserva').document(str(self.id))
         reserva_ref.set({
             'usuarios_id': self.usuarios.id,
             'data_reserva': self.data_reserva.isoformat(),  # Formato de string ISO para Firestore
@@ -86,7 +86,7 @@ class Reserva(models.Model):
             'materiais_id': self.materiais.id,
             'materiais_nome': self.materiais.nome_do_material,
         })
-        
+
         # Atualiza o campo 'reservado' na coleção 'materiais' no Firestore
         material_ref = db.collection('materiais').document(str(self.materiais.id))
         material_ref.update({'reservado': True})

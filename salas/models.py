@@ -13,7 +13,7 @@
 #     nome_da_sala = models.CharField(max_length=30)
 #     local = models.CharField(max_length=4, choices=LOCAL_CHOICES, default=UABJ)
 #     reservado = models.BooleanField(default=False)
-    
+
 #     class Meta:
 #         verbose_name = 'Sala'
 
@@ -26,10 +26,10 @@
 #     data_devolucao = models.DateTimeField()
 #     data_solicitacao = models.DateTimeField(auto_now_add=True)
 #     salas = models.ForeignKey(Salas, on_delete=models.DO_NOTHING)
-    
+
 #     class Meta:
 #         verbose_name = 'Reserva'
-    
+
 #     def __str__(self):
 #         return f"{self.usuarios} | {self.salas}"
 
@@ -43,7 +43,9 @@ from firebase_admin import credentials, firestore
 
 # Inicializa o Firebase
 if not firebase_admin._apps:
-    cred = credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json')
+    cred = credentials.Certificate(
+        r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json'
+    )
     firebase_admin.initialize_app(cred)
 
 # Obtendo a referência do Firestore
@@ -60,12 +62,23 @@ class Salas(models.Model):
     nome_da_sala = models.CharField(max_length=30)
     local = models.CharField(max_length=4, choices=LOCAL_CHOICES, default=UABJ)
     reservado = models.BooleanField(default=False)
-    
+
     class Meta:
         verbose_name = 'Sala'
 
     def __str__(self):
         return f"{self.nome_da_sala} ({self.get_local_display()})"
+
+    def save(self, *args, **kwargs):
+        super(Salas, self).save(*args, **kwargs)
+
+        # Atualiza ou cria o documento no Firestore
+        sala_ref = db.collection('salas').document(str(self.id))
+        sala_ref.set({
+            'nome_da_sala': self.nome_da_sala,
+            'local': self.get_local_display(),
+            'reservado': self.reservado,
+        })
 
 class Reservas(models.Model):
     usuarios = models.ForeignKey(Usuario, on_delete=models.DO_NOTHING)
@@ -73,10 +86,10 @@ class Reservas(models.Model):
     data_devolucao = models.DateTimeField()
     data_solicitacao = models.DateTimeField(auto_now_add=True)
     salas = models.ForeignKey(Salas, on_delete=models.DO_NOTHING)
-    
+
     class Meta:
         verbose_name = 'Reserva'
-    
+
     def __str__(self):
         return f"{self.usuarios} | {self.salas}"
 
@@ -96,7 +109,7 @@ class Reservas(models.Model):
         ).exists()
 
         if conflito:
-            raise ValidationError('Já existe uma reserva para este material no horário selecionado.')
+            raise ValidationError('Já existe uma reserva para esta sala no horário selecionado.')
 
     def save(self, *args, **kwargs):
         # Valida os dados antes de salvar
@@ -105,13 +118,13 @@ class Reservas(models.Model):
         # Salva o objeto no banco de dados do Django
         super(Reservas, self).save(*args, **kwargs)
 
-        # Adiciona a reserva ao Firestore
+        # Adiciona ou atualiza a reserva no Firestore
         reserva_ref = db.collection('reservas').document(str(self.id))
         reserva_ref.set({
             'usuarios_id': self.usuarios.id,
-            'data_reserva': self.data_reserva,  # Envia a data diretamente como datetime
-            'data_devolucao': self.data_devolucao,  # Envia a data diretamente como datetime
-            'data_solicitacao': self.data_solicitacao,  # Envia a data diretamente como datetime
+            'data_reserva': self.data_reserva.isoformat(),
+            'data_devolucao': self.data_devolucao.isoformat(),
+            'data_solicitacao': self.data_solicitacao.isoformat(),
             'salas_id': self.salas.id,
             'salas_nome': self.salas.nome_da_sala,
             'salas_local': self.salas.get_local_display(),
@@ -119,13 +132,5 @@ class Reservas(models.Model):
 
         # Atualiza o campo 'reservado' na coleção de salas no Firestore
         sala_ref = db.collection('salas').document(str(self.salas.id))
-        if not sala_ref.get().exists:
-            # Se o documento não existir, cria-o com dados iniciais
-            sala_ref.set({
-                'nome_da_sala': self.salas.nome_da_sala,
-                'local': self.salas.get_local_display(),
-                'reservado': False  # Valor inicial
-            })
-        
-        # Atualiza o campo 'reservado' da sala
         sala_ref.update({'reservado': True})
+
