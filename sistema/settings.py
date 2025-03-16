@@ -129,7 +129,8 @@ CSRF_COOKIE_SECURE = True  # Apenas se usar HTTPS
 SESSION_COOKIE_SECURE = True  # Apenas se usar HTTPS
 
 # Caminho para o arquivo JSON da chave privada do Firebase
-FIREBASE_ADMIN_CREDENTIAL = r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json'
+FIREBASE_ADMIN_CREDENTIAL = os.path.join(BASE_DIR, 'sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json')
+
 
 # Inicializando o Firebase com a chave privada
 cred = credentials.Certificate(FIREBASE_ADMIN_CREDENTIAL)
