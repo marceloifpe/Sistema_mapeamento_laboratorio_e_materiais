@@ -45,4 +45,4 @@ Agora, o projeto está pronto para ser executado!
 
 Caso tenha alguma dúvida ou encontre problemas na execução, entre em contato com a equipe.
 
-🚀 **Bom Teste da aplicação!**
+🚀 **Bom Teste da aplicação! (Email: admin@ufrpe.br e senha: 1234Mg3#d para testar usuário admin cadastrado)**
