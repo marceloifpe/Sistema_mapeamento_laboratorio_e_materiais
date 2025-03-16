@@ -31,7 +31,7 @@ if not SECRET_KEY:
 DEBUG = True
 
 # Permitir apenas acesso local ou seu domínio específico
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'your-domain.com', 'sistema-mapeamento-laboratorio-e.onrender.com','*']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'your-domain.com','*']
 
 # Instalação dos aplicativos
 INSTALLED_APPS = [
