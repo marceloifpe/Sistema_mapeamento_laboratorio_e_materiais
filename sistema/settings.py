@@ -115,6 +115,7 @@ USE_TZ = True
 # Arquivos estáticos (CSS, JS, Imagens)
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Adicionado para corrigir erro no deploy
 
 # Arquivos de mídia (uploads de arquivos)
 MEDIA_URL = '/media/'
