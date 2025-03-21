@@ -5,6 +5,10 @@ Este repositório pertence à equipe de PI3 e PI4, composta por:
 - **Marcel Gustavo**
 - **Matheus Omar**
 
+## 🔗 Deploy da Aplicação
+A versão em produção está disponível em:  
+[https://django-hello-world-eiif.onrender.com](https://django-hello-world-eiif.onrender.com)
+
 ## Requisitos
 Para executar o projeto em outro computador, é necessário ter o **Python 3** e o **SQLite3** instalados em sua máquina.
 
