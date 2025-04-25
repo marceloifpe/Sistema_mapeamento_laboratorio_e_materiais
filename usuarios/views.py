@@ -9,7 +9,7 @@ from firebase_admin import credentials, firestore, auth
 # Verifica se o app já foi inicializado
 if not firebase_admin._apps:
     # Carregamento das credenciais do Firebase
-    cred = credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json')
+    cred = credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-625943c0f3.json')
     firebase_admin.initialize_app(cred)
 
 # Configuração do Firebase para uso com pyrebase (autenticação)

@@ -8,7 +8,7 @@ from usuarios.models import Usuario
 # Inicializa o Firebase se ainda não estiver inicializado
 if not firebase_admin._apps:
     cred = credentials.Certificate(
-        r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json'
+        r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-625943c0f3.json'
     )
     firebase_admin.initialize_app(cred)
 
