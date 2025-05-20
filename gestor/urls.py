@@ -29,6 +29,11 @@ urlpatterns = [
     path('materiais/<int:pk>/editar/', MaterialUpdateView.as_view(), name='material_edit'),
     path('materiais/<int:pk>/detalhes/', MaterialDetailView.as_view(), name='material_detail'),
     path('materiais/<int:pk>/excluir/', MaterialDeleteView.as_view(), name='material_delete'),
+    # ✅ Caminho correto para cadastro via câmera
+    path('materiais/cadastrar_camera/', views.cadastrar_material_camera, name='material_create_cam'),
+
+
+
 
     # Novas URLs para rankings
     path('ranking_salas/', RankingSalasView.as_view(), name='ranking_salas'),
