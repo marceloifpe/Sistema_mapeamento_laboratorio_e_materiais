@@ -324,7 +324,7 @@ from django.views.generic import ListView
 
 # Verifica se o app do Firebase já foi inicializado
 if not firebase_admin._apps:
-    cred = firebase_admin.credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-8bb2f08483.json')
+    cred = firebase_admin.credentials.Certificate(r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-f79abd9e82.json')
     firebase_admin.initialize_app(cred)
 
 # Obtendo a referência ao Firestore

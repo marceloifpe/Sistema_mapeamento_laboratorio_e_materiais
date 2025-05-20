@@ -44,7 +44,7 @@ from firebase_admin import credentials, firestore
 # Inicializa o Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate(
-        r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-625943c0f3.json'
+        r'C:\Users\Marcelo\Documents\GitHub\Sistema_mapeamento_laboratorio_e_materiais\sistemamapeamentolaboratorio-firebase-adminsdk-dmdt8-f79abd9e82.json'
     )
     firebase_admin.initialize_app(cred)
 
