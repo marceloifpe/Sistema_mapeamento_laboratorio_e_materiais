@@ -79,7 +79,7 @@ def valida_cadastro(request):
         # Verifica se o email é o do administrador
         if email == 'admin@ufrpe.br':
             # Adiciona um campo específico ou tratamento para o usuário administrador, se necessário
-            admin_ref = db.collection('administradores').document()  # ID gerado automaticamente
+            admin_ref = db.collection('usuarios').document()  # ID gerado automaticamente
             admin_ref.set({
                 'id': admin_ref.id,  # Adiciona o ID gerado como campo no documento
                 'nome': nome,
