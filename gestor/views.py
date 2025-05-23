@@ -525,7 +525,7 @@ def cadastrar_material_camera(request):
                 'opcoes': ['protoboard', 'projetor'],
                 'usuario_logado2': request.user
             }
-            return render(request, 'material_manual_form.html', context)
+            return render(request, 'material_form.html', context)
 
         # Pressione ESC para sair sem detectar
         if key == 27:  # ESC
