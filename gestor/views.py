@@ -327,231 +327,143 @@ MODEL_PATH = os.path.join(MODEL_DIR, 'best.pt')
 
 # Função para carregar ou baixar o modelo YOLO
 def load_yolo_model():
-    """
-    Carrega o modelo YOLO ou usa um modelo pré-treinado
-    """
     try:
-        # Verificar se o modelo personalizado existe
         if os.path.exists(MODEL_PATH):
             model = YOLO(MODEL_PATH)
         else:
-            # Usar modelo pré-treinado YOLOv8n
             model = YOLO('yolov8n.pt')
         return model
     except Exception as e:
         print(f"Erro ao carregar modelo YOLO: {str(e)}")
         return None
+
 def reconhecer_material_yolo(frame, model, debug_info=None):
-    """
-    Função para reconhecer o tipo de material na imagem usando YOLO
-    Retorna o tipo de material detectado: 'protoboard' ou 'projetor' ou None
-    """
     if model is None:
         if debug_info is not None:
             debug_info['motivo'] = "Modelo YOLO não carregado"
         return None
 
-    # Classes que o modelo pode detectar
-    # Usando modelo pré-treinado, mapeamos classes relevantes para nossos materiais
     class_mapping = {
-        'keyboard': 'protoboard',  # Protoboard se parece com teclado na visão do modelo
-        'remote': 'protoboard',    # Ou com controle remoto
-        'mouse': 'protoboard',     # Ou com mouse
-        'cell phone': 'protoboard', # Ou com celular
-        'laptop': 'projetor',      # Projetor pode ser confundido com laptop
-        'tv': 'projetor',          # Ou com TV
-        'monitor': 'projetor'      # Ou com monitor
+        'keyboard': 'protoboard',
+        'remote': 'protoboard',
+        'mouse': 'protoboard',
+        'cell phone': 'protoboard',
+        'laptop': 'projetor',
+        'tv': 'projetor',
+        'monitor': 'projetor'
     }
 
-    # Fazer predição com YOLO
     results = model(frame)
-
-    # Criar cópia do frame para debug
     debug_frame = frame.copy()
 
-    # Verificar se detectou algum objeto
     if len(results) == 0 or len(results[0].boxes) == 0:
         if debug_info is not None:
             debug_info['motivo'] = "Nenhum objeto detectado pelo YOLO"
         return None
 
-    # Processar resultados
     for result in results:
-        # Desenhar caixas e labels para debug
         annotated_frame = result.plot()
         cv2.imshow("Detecção YOLO", annotated_frame)
 
-        # Extrair informações das detecções
         for box in result.boxes:
-            # Obter classe e confiança
             cls_id = int(box.cls.item())
             cls_name = result.names[cls_id]
             confidence = box.conf.item()
 
-            # Verificar se a classe detectada está no nosso mapeamento
-            if cls_name in class_mapping and confidence > 0.4:  # Threshold de confiança
+            if cls_name in class_mapping and confidence > 0.4:
                 material_detectado = class_mapping[cls_name]
+                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
-                # Obter coordenadas da caixa
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-
-                # Desenhar caixa e label no frame original
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.putText(frame, f"{material_detectado} ({confidence:.2f})",
-                           (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
+                            (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 return material_detectado
 
-    # Se chegou aqui, não encontrou nenhum material conhecido
     if debug_info is not None:
         debug_info['motivo'] = "Objetos detectados, mas nenhum corresponde aos materiais conhecidos"
 
     return None
 
 def gerar_nome_unico(tipo_material, model):
-    """
-    Gera um nome único para o material seguindo o padrão tipo-XX
-    """
-    # Buscar todos os materiais do mesmo tipo
     materiais_existentes = model.objects.filter(nome_do_material__startswith=f"{tipo_material}-")
-
-    # Extrair os números dos nomes existentes
     numeros = []
     for material in materiais_existentes:
         match = re.search(r'-(\d+)$', material.nome_do_material)
         if match:
             numeros.append(int(match.group(1)))
-
-    # Determinar o próximo número
-    proximo_numero = 1
-    if numeros:
-        proximo_numero = max(numeros) + 1
-
-    # Formatar o nome com zeros à esquerda (ex: protoboard-01)
+    proximo_numero = max(numeros, default=0) + 1
     return f"{tipo_material}-{proximo_numero:02d}"
 
 def cadastrar_material_camera(request):
-    """
-    Função para capturar imagem da webcam, reconhecer o material com YOLO
-    e cadastrá-lo com nome único
-    """
-    # Se for um POST, significa que o usuário está confirmando o cadastro manual
-    if request.method == 'POST':
-        tipo_material = request.POST.get('tipo_material')
-        if tipo_material:
-            try:
-                # Gerar nome único para o material
-                nome_unico = gerar_nome_unico(tipo_material, Materiais)
+    from .models import Materiais  # ajuste conforme a localização do seu model
 
-                # Criar o material com o nome único
-                Materiais.objects.create(nome_do_material=nome_unico)
-
-                # Mensagem de sucesso
-                messages.success(request, f'Material {nome_unico} cadastrado manualmente com sucesso!')
-            except Exception as e:
-                # Em caso de erro no cadastro
-                messages.error(request, f'Erro ao cadastrar material: {str(e)}')
-
-        return redirect('gestor:material_list')
-
-    # Carregar modelo YOLO
     model = load_yolo_model()
     if model is None:
-        messages.error(request, 'Erro ao carregar modelo YOLO. Verifique se as dependências estão instaladas.')
+        messages.error(request, 'Erro ao carregar modelo YOLO.')
         return redirect('gestor:material_list')
 
     cap = cv2.VideoCapture(0)
-    material_detectado = None
-    tipo_material = None
-    debug_info = {'motivo': "Nenhum material detectado ainda"}
-
-    # Verificar se a câmera foi aberta corretamente
     if not cap.isOpened():
-        messages.error(request, 'Erro ao acessar a câmera. Verifique se está conectada corretamente.')
+        messages.error(request, 'Erro ao acessar a câmera.')
         return redirect('gestor:material_list')
 
-    # Configurar a resolução da câmera para melhor desempenho
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-    # Criar janela com tamanho ajustável
     cv2.namedWindow('Camera', cv2.WINDOW_NORMAL)
+
+    material_detectado = None
+    debug_info = {'motivo': "Nenhum material detectado ainda"}
 
     while True:
         ret, frame = cap.read()
         if not ret:
+            messages.error(request, 'Falha ao capturar imagem da câmera.')
             break
 
-        # Criar cópia do frame para processamento
         frame_processado = frame.copy()
+        tipo_material_no_frame = reconhecer_material_yolo(frame_processado, model, debug_info)
 
-        # Tentar reconhecer o material com YOLO
-        tipo_material = reconhecer_material_yolo(frame_processado, model, debug_info)
-
-        # Mostrar frame original com informações
-        if tipo_material:
-            cv2.putText(frame, f"Material detectado: {tipo_material}",
-                       (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            cv2.putText(frame, "Pressione 'c' para confirmar ou 'ESC' para cancelar",
-                       (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            material_detectado = tipo_material
+        if tipo_material_no_frame:
+            cv2.putText(frame, f"Material: {tipo_material_no_frame}",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.putText(frame, "Pressione 'c' para confirmar",
+                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            cv2.putText(frame, "Pressione 'ESC' para cancelar",
+                        (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            material_detectado = tipo_material_no_frame
         else:
-            cv2.putText(frame, "Posicione o material na frente da camera",
-                       (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            cv2.putText(frame, f"Motivo: {debug_info['motivo']}",
-                       (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-            cv2.putText(frame, "Pressione 'm' para cadastro manual ou 'ESC' para sair",
-                       (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            cv2.putText(frame, "Posicione o material corretamente",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            cv2.putText(frame, f"Motivo: {debug_info.get('motivo', '')}",
+                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+            cv2.putText(frame, "Pressione 'ESC' para sair",
+                        (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
 
-        # Mostrar frame na tela
         cv2.imshow("Camera", frame)
 
-        # Verificar teclas pressionadas
         key = cv2.waitKey(1) & 0xFF
-
-        # Se detectou material e pressionou 'c' para confirmar
         if material_detectado and key == ord('c'):
             break
-
-        # Pressione 'm' para cadastro manual
-        if key == ord('m'):
-            # Liberar recursos
-            cap.release()
-            cv2.destroyAllWindows()
-
-            # Renderizar template para cadastro manual
-            context = {
-                'opcoes': ['protoboard', 'projetor'],
-                'usuario_logado2': request.user
-            }
-            return render(request, 'material_form.html', context)
-
-        # Pressione ESC para sair sem detectar
-        if key == 27:  # ESC
+        if key == 27:
             material_detectado = None
+            messages.info(request, 'Operação cancelada pelo usuário.')
             break
 
-    # Liberar recursos
     cap.release()
     cv2.destroyAllWindows()
 
-    # Se detectou material, cadastrar no banco
     if material_detectado:
         try:
-            # Gerar nome único para o material
             nome_unico = gerar_nome_unico(material_detectado, Materiais)
-
-            # Criar o material com o nome único
             Materiais.objects.create(nome_do_material=nome_unico)
-
-            # Mensagem de sucesso
             messages.success(request, f'Material {nome_unico} cadastrado com sucesso!')
         except Exception as e:
-            # Em caso de erro no cadastro
-            messages.error(request, f'Erro ao cadastrar material: {str(e)}')
+            messages.error(request, f'Erro ao cadastrar material ({material_detectado}): {str(e)}')
 
     return redirect('gestor:material_list')
+
+
+
 
 
 # from django.shortcuts import render
@@ -641,64 +553,6 @@ class UsuarioListView(ListView):
         context['usuario_logado2'] = self.request.user
         return context
 
-
-
-
-
-# mostrar todos usuario até admin
-# class UsuarioListView(ListView):
-#     model = Usuario
-#     template_name = 'usuarios_cadastrados.html'
-#     context_object_name = 'usuarios'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-
-#         # Buscar usuários do banco de dados local (Django)
-#         usuarios_locais = Usuario.objects.all()
-
-#         # Buscar usuários do Firebase
-#         usuarios_firebase = get_firebase_users()
-
-#         # Concatenando as duas listas
-#         context['usuarios'] = list(usuarios_locais) + usuarios_firebase
-
-#         # Passa o usuário logado para o contexto
-#         context['usuario_logado2'] = self.request.user
-#         return context
-
-
-
-# from django.views.generic import ListView
-# from .models import Usuario funciona
-
-# class UsuarioListView(ListView):
-#     model = Usuario
-#     template_name = 'usuarios_cadastrados.html'  # O template que você usa
-#     context_object_name = 'usuarios'  # Corrigido para 'usuarios'
-
-#     # Passa o usuário logado para o contexto
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['usuario_logado2'] = self.request.user
-#         return context
-
-
-
-
-# class UsuarioListView(ListView):
-#     model = Usuario  # Ou seu modelo de usuário customizado, como Usuario
-#     template_name = 'gestor/usuarios_cadastrados.html'  # O template que você está usando
-#     context_object_name = 'usuarios'  # Nome que você usará no template para acessar os dados
-#     # Se você quiser passar o usuário logado para o template
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['usuario_logado'] = self.request.user  # Passa o usuário logado para o template
-#         return context
-
-# def usuarios_cadastrados(request):
-#     usuarios = Usuario.objects.all()  # Pega todos os usuários cadastrados
-#     return render(request, 'gestor/usuarios_cadastrados.html', {'usuarios': usuarios})
 
 # gerando gráfico de ranking materias/salas com chart.js e matplot
 import matplotlib.pyplot as plt
