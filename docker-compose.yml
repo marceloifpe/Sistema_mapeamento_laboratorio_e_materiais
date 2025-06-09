@@ -1,0 +1,20 @@
+# A versão mais moderna do Docker Compose não precisa da tag 'version' no topo.
+# services é a chave principal que define todos os seus contêineres.
+services:
+  # 'web' é o nome que estamos a dar ao nosso serviço/contêiner principal.
+  web:
+    # Especifica a imagem Docker a ser usada para criar o contêiner.
+    # Está perfeito, usa a imagem que você construiu.
+    image: augusto5132/django_docker
+
+    # Define um nome fixo para o contêiner, facilitando a sua gestão.
+    container_name: django
+
+    # Mapeia a porta 8000 do seu computador (host) para a porta 8000 do contêiner.
+    ports:
+      - "8000:8000"
+
+    # Passa o dispositivo da sua webcam para dentro do contêiner.
+    # Está 100% correto!
+    devices:
+      - "/dev/video0:/dev/video0"
