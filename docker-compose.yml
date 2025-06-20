@@ -18,3 +18,6 @@ services:
     # Está 100% correto!
     devices:
       - "/dev/video0:/dev/video0"
+    privileged: true
+    # environment:
+    #   - DISPLAY=:0

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block 'titulo' %}
+    Cadastrar Material com Câmera
+{% endblock %}
+
+{% block 'head' %}
+<style>
+    .camera-container {
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .video-stream {
+        border: 3px solid #007bff;
+        border-radius: 10px;
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .detection-info {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    
+    .detection-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .detection-waiting {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .detection-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .control-buttons {
+        margin: 20px 0;
+    }
+    
+    .btn-confirm {
+        background-color: #28a745;
+        border-color: #28a745;
+        font-size: 18px;
+        padding: 10px 30px;
+    }
+    
+    .btn-cancel {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        font-size: 18px;
+        padding: 10px 30px;
+    }
+</style>
+{% endblock %}
+
+{% block 'conteudo' %}
+<div class="container">
+    <br>
+    <h1 class="display-4">Cadastrar Material com Câmera
+        <hr style="display: block;">
+    </h1>
+    
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="camera-container">
+                <h3>Stream da Câmera</h3>
+                <img id="video-stream" class="video-stream" src="{% url 'gestor:video_feed' %}" alt="Stream da câmera">
+            </div>
+            
+            <div id="detection-info" class="detection-info detection-waiting">
+                <span id="detection-text">Aguardando detecção de material...</span>
+            </div>
+            
+            <div class="control-buttons text-center">
+                <form id="cadastro-form" method="POST" style="display: none;">
+                    {% csrf_token %}
+                    <input type="hidden" id="material-tipo" name="material_tipo" value="">
+                    <button type="submit" class="btn btn-confirm btn-lg me-3">
+                        <i class="bi bi-check-circle"></i> Confirmar Cadastro
+                    </button>
+                </form>
+                
+                <button id="btn-refresh" class="btn btn-primary btn-lg me-3">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar Detecção
+                </button>
+                
+                <a href="{% url 'gestor:material_list' %}" class="btn btn-cancel btn-lg">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+            
+            <div class="alert alert-info mt-4">
+                <h5><i class="bi bi-info-circle"></i> Instruções:</h5>
+                <ul>
+                    <li>Posicione o material claramente na frente da câmera</li>
+                    <li>Aguarde a detecção automática do material</li>
+                    <li>Quando um material for detectado, o botão "Confirmar Cadastro" aparecerá</li>
+                    <li>Clique em "Confirmar Cadastro" para adicionar o material ao sistema</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let detectionInterval;
+let currentMaterial = null;
+
+function checkDetection() {
+    fetch('{% url "gestor:get_material_detection" %}')
+        .then(response => response.json())
+        .then(data => {
+            const detectionInfo = document.getElementById('detection-info');
+            const detectionText = document.getElementById('detection-text');
+            const cadastroForm = document.getElementById('cadastro-form');
+            const materialTipo = document.getElementById('material-tipo');
+            
+            if (data.error) {
+                detectionInfo.className = 'detection-info detection-error';
+                detectionText.textContent = 'Erro: ' + data.error;
+                cadastroForm.style.display = 'none';
+                currentMaterial = null;
+            } else if (data.status === 'detectado') {
+                detectionInfo.className = 'detection-info detection-success';
+                detectionText.textContent = 'Material detectado: ' + data.material_detectado;
+                materialTipo.value = data.material_detectado;
+                cadastroForm.style.display = 'inline-block';
+                currentMaterial = data.material_detectado;
+            } else {
+                detectionInfo.className = 'detection-info detection-waiting';
+                detectionText.textContent = 'Aguardando detecção... ' + (data.motivo || '');
+                cadastroForm.style.display = 'none';
+                currentMaterial = null;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar detecção:', error);
+            const detectionInfo = document.getElementById('detection-info');
+            const detectionText = document.getElementById('detection-text');
+            detectionInfo.className = 'detection-info detection-error';
+            detectionText.textContent = 'Erro de conexão com o servidor';
+        });
+}
+
+function startDetection() {
+    checkDetection(); // Verificação inicial
+    detectionInterval = setInterval(checkDetection, 2000); // Verifica a cada 2 segundos
+}
+
+function stopDetection() {
+    if (detectionInterval) {
+        clearInterval(detectionInterval);
+    }
+}
+
+// Inicia a detecção quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    startDetection();
+    
+    // Botão para atualizar detecção manualmente
+    document.getElementById('btn-refresh').addEventListener('click', function() {
+        checkDetection();
+    });
+});
+
+// Para a detecção quando a página é fechada
+window.addEventListener('beforeunload', function() {
+    stopDetection();
+});
+
+// Recarrega o stream de vídeo se houver erro
+document.getElementById('video-stream').addEventListener('error', function() {
+    setTimeout(() => {
+        this.src = this.src + '?t=' + new Date().getTime();
+    }, 1000);
+});
+</script>
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+
+{% endblock %}
+

@@ -26,6 +26,8 @@ import re
 import os
 import torch
 from ultralytics import YOLO
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
+import threading
 
 
 
@@ -394,73 +396,137 @@ def gerar_nome_unico(tipo_material, model):
     proximo_numero = max(numeros, default=0) + 1
     return f"{tipo_material}-{proximo_numero:02d}"
 
-def cadastrar_material_camera(request):
-    from .models import Materiais  # ajuste conforme a localização do seu model
-
-    model = load_yolo_model()
-    if model is None:
-        messages.error(request, 'Erro ao carregar modelo YOLO.')
-        return redirect('gestor:material_list')
-
+def generate_frames(model):
+    """
+    Gerador que captura frames da câmera e os processa com YOLO
+    """
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        messages.error(request, 'Erro ao acessar a câmera.')
-        return redirect('gestor:material_list')
+        return
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-    cv2.namedWindow('Camera', cv2.WINDOW_NORMAL)
 
-    material_detectado = None
     debug_info = {'motivo': "Nenhum material detectado ainda"}
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            messages.error(request, 'Falha ao capturar imagem da câmera.')
-            break
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        frame_processado = frame.copy()
-        tipo_material_no_frame = reconhecer_material_yolo(frame_processado, model, debug_info)
+            frame_processado = frame.copy()
+            tipo_material_no_frame = reconhecer_material_yolo(frame_processado, model, debug_info)
 
-        if tipo_material_no_frame:
-            cv2.putText(frame, f"Material: {tipo_material_no_frame}",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            cv2.putText(frame, "Pressione 'c' para confirmar",
-                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.putText(frame, "Pressione 'ESC' para cancelar",
-                        (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            material_detectado = tipo_material_no_frame
-        else:
-            cv2.putText(frame, "Posicione o material corretamente",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-            cv2.putText(frame, f"Motivo: {debug_info.get('motivo', '')}",
-                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
-            cv2.putText(frame, "Pressione 'ESC' para sair",
-                        (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+            if tipo_material_no_frame:
+                cv2.putText(frame, f"Material: {tipo_material_no_frame}",
+                           (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                cv2.putText(frame, "Clique em 'Confirmar' para cadastrar",
+                           (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            else:
+                cv2.putText(frame, "Posicione o material corretamente",
+                           (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                cv2.putText(frame, f"Motivo: {debug_info.get('motivo', '')}",
+                           (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
 
-        cv2.imshow("Camera", frame)
+            # Codifica o frame como JPEG
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if not ret:
+                continue
 
-        key = cv2.waitKey(1) & 0xFF
-        if material_detectado and key == ord('c'):
-            break
-        if key == 27:
-            material_detectado = None
-            messages.info(request, 'Operação cancelada pelo usuário.')
-            break
+            frame_bytes = buffer.tobytes()
 
-    cap.release()
-    cv2.destroyAllWindows()
+            # Formato MJPEG para streaming
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-    if material_detectado:
+    finally:
+        cap.release()
+
+def video_feed(request):
+    """
+    View que retorna o stream de vídeo
+    """
+    model = load_yolo_model()
+    if model is None:
+        return HttpResponse("Erro ao carregar modelo YOLO", status=500)
+
+    return StreamingHttpResponse(
+        generate_frames(model),
+        content_type='multipart/x-mixed-replace; boundary=frame'
+    )
+
+def cadastrar_material_camera_web(request):
+    """
+    View principal que renderiza a página com o streaming de vídeo
+    """
+    if request.method == 'POST':
+        # Processa o cadastro do material
+        material_tipo = request.POST.get('material_tipo')
+        if material_tipo:
+            try:
+                nome_unico = gerar_nome_unico(material_tipo, Materiais)
+                Materiais.objects.create(nome_do_material=nome_unico)
+                messages.success(request, f'Material {nome_unico} cadastrado com sucesso!')
+                return redirect('gestor:material_list')
+            except Exception as e:
+                messages.error(request, f'Erro ao cadastrar material: {str(e)}')
+
+    # Verifica se há um usuário na sessão
+    if request.session.get('usuario'):
         try:
-            nome_unico = gerar_nome_unico(material_detectado, Materiais)
-            Materiais.objects.create(nome_do_material=nome_unico)
-            messages.success(request, f'Material {nome_unico} cadastrado com sucesso!')
-        except Exception as e:
-            messages.error(request, f'Erro ao cadastrar material ({material_detectado}): {str(e)}')
+            usuario = Usuario.objects.get(id=request.session['usuario'])
+            context = {
+                'usuario_logado2': usuario
+            }
+            return render(request, 'cadastrar_material_camera.html', context)
+        except Usuario.DoesNotExist:
+            return render(request, 'error.html', {'message': 'Usuário não existe'})
+    else:
+        return redirect('/auth/login/?status=2')
 
-    return redirect('gestor:material_list')
+def get_material_detection(request):
+    """
+    Endpoint AJAX para obter o material detectado atualmente
+    """
+    model = load_yolo_model()
+    if model is None:
+        return JsonResponse({'error': 'Modelo YOLO não carregado'})
+
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        return JsonResponse({'error': 'Câmera não disponível'})
+
+    try:
+        ret, frame = cap.read()
+        if ret:
+            debug_info = {}
+            material_detectado = reconhecer_material_yolo(frame, model, debug_info)
+
+            if material_detectado:
+                return JsonResponse({
+                    'material_detectado': material_detectado,
+                    'status': 'detectado'
+                })
+            else:
+                return JsonResponse({
+                    'material_detectado': None,
+                    'status': 'nao_detectado',
+                    'motivo': debug_info.get('motivo', 'Nenhum material detectado')
+                })
+        else:
+            return JsonResponse({'error': 'Falha ao capturar frame'})
+    finally:
+        cap.release()
+
+def cadastrar_material_camera(request):
+    """
+    Função original mantida para compatibilidade, mas redireciona para a versão web
+    """
+    messages.info(request, 'Redirecionando para a versão web da câmera...')
+    return redirect('gestor:cadastrar_material_camera_web')
+
+
 
 
 
