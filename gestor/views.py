@@ -28,6 +28,9 @@ import torch
 from ultralytics import YOLO
 from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
 import threading
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from PIL import Image
 
 
 
@@ -323,21 +326,23 @@ class MaterialDeleteView(DeleteView):
 # Diretório para salvar o modelo YOLO
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'yolo_model')
 os.makedirs(MODEL_DIR, exist_ok=True)
-
-# Caminho para o modelo YOLO
 MODEL_PATH = os.path.join(MODEL_DIR, 'best.pt')
 
-# Função para carregar ou baixar o modelo YOLO
+# Função para carregar o modelo YOLO
 def load_yolo_model():
     try:
         if os.path.exists(MODEL_PATH):
             model = YOLO(MODEL_PATH)
         else:
             model = YOLO('yolov8n.pt')
+        print("Modelo YOLO carregado com sucesso.")
         return model
     except Exception as e:
         print(f"Erro ao carregar modelo YOLO: {str(e)}")
         return None
+
+# Carregamos o modelo numa variável global para que ele esteja sempre disponível
+yolo_model = load_yolo_model()
 
 def reconhecer_material_yolo(frame, model, debug_info=None):
     if model is None:
@@ -346,17 +351,12 @@ def reconhecer_material_yolo(frame, model, debug_info=None):
         return None
 
     class_mapping = {
-        'keyboard': 'protoboard',
-        'remote': 'protoboard',
-        'mouse': 'protoboard',
-        'cell phone': 'protoboard',
-        'laptop': 'projetor',
-        'tv': 'projetor',
+        'keyboard': 'protoboard', 'remote': 'protoboard', 'mouse': 'protoboard',
+        'cell phone': 'protoboard', 'laptop': 'projetor', 'tv': 'projetor',
         'monitor': 'projetor'
     }
 
-    results = model(frame)
-    debug_frame = frame.copy()
+    results = model(frame, verbose=False)
 
     if len(results) == 0 or len(results[0].boxes) == 0:
         if debug_info is not None:
@@ -364,22 +364,13 @@ def reconhecer_material_yolo(frame, model, debug_info=None):
         return None
 
     for result in results:
-        annotated_frame = result.plot()
-        cv2.imshow("Detecção YOLO", annotated_frame)
-
         for box in result.boxes:
             cls_id = int(box.cls.item())
             cls_name = result.names[cls_id]
             confidence = box.conf.item()
 
             if cls_name in class_mapping and confidence > 0.4:
-                material_detectado = class_mapping[cls_name]
-                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, f"{material_detectado} ({confidence:.2f})",
-                            (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                return material_detectado
+                return class_mapping[cls_name]
 
     if debug_info is not None:
         debug_info['motivo'] = "Objetos detectados, mas nenhum corresponde aos materiais conhecidos"
@@ -396,132 +387,65 @@ def gerar_nome_unico(tipo_material, model):
     proximo_numero = max(numeros, default=0) + 1
     return f"{tipo_material}-{proximo_numero:02d}"
 
-def generate_frames(model):
+
+@csrf_exempt
+@require_POST
+def video_feed(request): # Esta é a única view necessária para processar a imagem do JS
     """
-    Gerador que captura frames da câmera e os processa com YOLO
+    Recebe um frame de imagem do navegador (via POST), processa com YOLO e devolve o resultado.
     """
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        return
-
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-    debug_info = {'motivo': "Nenhum material detectado ainda"}
-
     try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+        image_data = request.POST.get('image_data')
+        if not image_data:
+            return JsonResponse({'status': 'erro', 'motivo': 'Nenhum dado de imagem recebido.'})
 
-            frame_processado = frame.copy()
-            tipo_material_no_frame = reconhecer_material_yolo(frame_processado, model, debug_info)
+        header, encoded = image_data.split(",", 1)
+        binary_data = base64.b64decode(encoded)
+        image = Image.open(BytesIO(binary_data))
+        frame_np = np.array(image)
+        frame_cv2 = cv2.cvtColor(frame_np, cv2.COLOR_RGB2BGR)
 
-            if tipo_material_no_frame:
-                cv2.putText(frame, f"Material: {tipo_material_no_frame}",
-                           (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                cv2.putText(frame, "Clique em 'Confirmar' para cadastrar",
-                           (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            else:
-                cv2.putText(frame, "Posicione o material corretamente",
-                           (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                cv2.putText(frame, f"Motivo: {debug_info.get('motivo', '')}",
-                           (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+        material_detectado = reconhecer_material_yolo(frame_cv2, yolo_model)
 
-            # Codifica o frame como JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            if not ret:
-                continue
+        if material_detectado:
+            return JsonResponse({'status': 'detectado', 'material': material_detectado})
+        else:
+            return JsonResponse({'status': 'nao_detectado', 'motivo': 'Nenhum material reconhecido.'})
 
-            frame_bytes = buffer.tobytes()
-
-            # Formato MJPEG para streaming
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-    finally:
-        cap.release()
-
-def video_feed(request):
-    """
-    View que retorna o stream de vídeo
-    """
-    model = load_yolo_model()
-    if model is None:
-        return HttpResponse("Erro ao carregar modelo YOLO", status=500)
-
-    return StreamingHttpResponse(
-        generate_frames(model),
-        content_type='multipart/x-mixed-replace; boundary=frame'
-    )
+    except Exception as e:
+        print(f"Erro ao processar frame: {e}")
+        return JsonResponse({'status': 'erro', 'motivo': str(e)}, status=500)
 
 def cadastrar_material_camera_web(request):
     """
-    View principal que renderiza a página com o streaming de vídeo
+    View principal que renderiza a página de cadastro com câmera.
     """
     if request.method == 'POST':
-        # Processa o cadastro do material
         material_tipo = request.POST.get('material_tipo')
         if material_tipo:
             try:
                 nome_unico = gerar_nome_unico(material_tipo, Materiais)
                 Materiais.objects.create(nome_do_material=nome_unico)
                 messages.success(request, f'Material {nome_unico} cadastrado com sucesso!')
-                return redirect('gestor:material_list')
             except Exception as e:
                 messages.error(request, f'Erro ao cadastrar material: {str(e)}')
+        return redirect('gestor:material_list')
 
-    # Verifica se há um usuário na sessão
+
     if request.session.get('usuario'):
         try:
             usuario = Usuario.objects.get(id=request.session['usuario'])
-            context = {
-                'usuario_logado2': usuario
-            }
+            context = {'usuario_logado2': usuario}
             return render(request, 'cadastrar_material_camera.html', context)
         except Usuario.DoesNotExist:
             return render(request, 'error.html', {'message': 'Usuário não existe'})
     else:
         return redirect('/auth/login/?status=2')
 
-def get_material_detection(request):
-    """
-    Endpoint AJAX para obter o material detectado atualmente
-    """
-    model = load_yolo_model()
-    if model is None:
-        return JsonResponse({'error': 'Modelo YOLO não carregado'})
-
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        return JsonResponse({'error': 'Câmera não disponível'})
-
-    try:
-        ret, frame = cap.read()
-        if ret:
-            debug_info = {}
-            material_detectado = reconhecer_material_yolo(frame, model, debug_info)
-
-            if material_detectado:
-                return JsonResponse({
-                    'material_detectado': material_detectado,
-                    'status': 'detectado'
-                })
-            else:
-                return JsonResponse({
-                    'material_detectado': None,
-                    'status': 'nao_detectado',
-                    'motivo': debug_info.get('motivo', 'Nenhum material detectado')
-                })
-        else:
-            return JsonResponse({'error': 'Falha ao capturar frame'})
-    finally:
-        cap.release()
 
 def cadastrar_material_camera(request):
     """
-    Função original mantida para compatibilidade, mas redireciona para a versão web
+    Função original mantida para compatibilidade, redirecionando para a versão web.
     """
     messages.info(request, 'Redirecionando para a versão web da câmera...')
     return redirect('gestor:cadastrar_material_camera_web')

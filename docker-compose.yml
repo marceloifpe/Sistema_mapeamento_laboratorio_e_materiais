@@ -16,8 +16,8 @@ services:
 
     # Passa o dispositivo da sua webcam para dentro do contêiner.
     # Está 100% correto!
-    devices:
-      - "/dev/video0:/dev/video0"
-    privileged: true
+    # devices:
+    #   - "/dev/video0:/dev/video0"
+    # privileged: true
     # environment:
     #   - DISPLAY=:0

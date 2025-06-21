@@ -38,7 +38,7 @@ urlpatterns = [
 
     # URLs para streaming de vídeo
     path('video_feed/', views.video_feed, name='video_feed'),
-    path('get_material_detection/', views.get_material_detection, name='get_material_detection'),
+    # path('get_material_detection/', views.get_material_detection, name='get_material_detection'),
 
 
 
