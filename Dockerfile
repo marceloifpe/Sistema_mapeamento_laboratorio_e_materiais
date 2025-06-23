@@ -55,6 +55,13 @@ RUN addgroup --system app && adduser --system --group app
 # Copia todo o restante do projeto para dentro do container
 COPY . .
 
+# --------------------------------------------------------------------
+# >>> ETAPA DE VALIDAÇÃO ADICIONADA AQUI <<<
+# Executa a suíte de testes completa do projeto. Se qualquer teste
+# falhar, o build do Docker será interrompido neste ponto.
+# --------------------------------------------------------------------
+RUN python manage.py test
+
 # Altera o proprietário dos arquivos para o novo usuário
 RUN chown -R app:app /app
 
